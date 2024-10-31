@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGB Reciclar</title>
+    <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="Canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('Canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const fondo = new Image();
+        fondo.src = 'arroyo.jfif';
+
+        const jugador = new Image();
+        jugador.src = 'jugador.jfif';
+
+        const basuraImg = new Image();
+        basuraImg.src = 'basura.jfif';
+
+        let x = 50;
+        let y = 50;
+        const tamaño = 50;
+        const velocidad = 5;
+        const basuras = [];
+        let puntos = 0;
+
+        const teclasPresionadas = {};
+
+        function crearBasuraAleatoria() {
+            const tamañoAleatorio = 70;
+            const nuevaBasura = {
+                x: Math.random() * (canvas.width - tamañoAleatorio),
+                y: Math.random() * (canvas.height - tamañoAleatorio),
+                tamaño: tamañoAleatorio
+            };
+            basuras.push(nuevaBasura);
+        }
+
+        function dibujarBasura(basura) {
+            ctx.drawImage(basuraImg, basura.x, basura.y, basura.tamaño, basura.tamaño);
+        }
+
+        function dibujarJugador() {
+            ctx.drawImage(jugador, x, y, tamaño, tamaño);
+        }
+
+        function dibujarFondo() {
+            ctx.drawImage(fondo, 0, 0, canvas.width, canvas.height);
+        }
+
+        function dibujarContador() {
+            ctx.fillStyle = 'red';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Puntos: ${puntos}`, canvas.width / 2, 40);
+        }
+
+        function colision(basura) {
+            return x < basura.x + basura.tamaño &&
+                   x + tamaño > basura.x &&
+                   y < basura.y + basura.tamaño &&
+                   y + tamaño > basura.y;
+        }
+
+        function moverJugador() {
+            if (teclasPresionadas['w'] && y > 0) y -= velocidad;
+            if (teclasPresionadas['a'] && x > 0) x -= velocidad;
+            if (teclasPresionadas['s'] && y < canvas.height - tamaño) y += velocidad;
+            if (teclasPresionadas['d'] && x < canvas.width - tamaño) x += velocidad;
+
+            for (let i = basuras.length - 1; i >= 0; i--) {
+                if (colision(basuras[i])) {
+                    basuras.splice(i, 1);
+                    puntos++;
+                }
+            }
+
+            dibujarFondo();
+            dibujarJugador();
+            basuras.forEach(dibujarBasura);
+            dibujarContador();
+            requestAnimationFrame(moverJugador);
+        }
+
+        window.addEventListener('keydown', (event) => {
+            teclasPresionadas[event.key] = true;
+        });
+
+        window.addEventListener('keyup', (event) => {
+            teclasPresionadas[event.key] = false;
+        });
+
+        setInterval(crearBasuraAleatoria, 2000);
+
+        let imagesLoaded = 0;
+        const totalImages = 3;
+
+        fondo.onload = jugador.onload = basuraImg.onload = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                moverJugador();
+            }
+        };
+    </script>
+</body>
+</html>
